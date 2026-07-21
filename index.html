@@ -1,0 +1,2422 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>平面向量與線性組合互動教室</title>
+    <!-- 引入高質感字型 -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-panel: #1e293b;
+            --bg-card: #0f172a;
+            --border-color: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            
+            --color-blue: #3b82f6;
+            --color-blue-bg: rgba(59, 130, 246, 0.15);
+            --color-red: #ef4444;
+            --color-red-bg: rgba(239, 68, 68, 0.15);
+            --color-green: #10b981;
+            --color-green-bg: rgba(16, 185, 129, 0.15);
+            --color-purple: #8b5cf6;
+            --color-purple-bg: rgba(139, 92, 246, 0.15);
+            --color-gold: #fbbf24;
+            --color-warning: #f59e0b;
+            --card-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: "Noto Sans TC", system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        /* ==========================================
+           1. 初始選擇頁面 (Landing Page)
+           ========================================== */
+        .landing-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: radial-gradient(circle at center, #1e293b 0%, #090d16 100%);
+            padding: 24px;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+
+        .landing-container.hidden {
+            display: none !important;
+        }
+
+        .landing-header {
+            text-align: center;
+            margin-bottom: 36px;
+            animation: fadeInDown 0.6s ease;
+        }
+
+        .landing-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            background: linear-gradient(to right, #60a5fa, #f87171, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .landing-header p {
+            font-size: 15px;
+            color: var(--text-secondary);
+        }
+
+        .portal-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        @media (min-width: 768px) {
+            .portal-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .portal-card {
+            background: rgba(30, 41, 59, 0.7);
+            border: 2px solid var(--border-color);
+            border-radius: 20px;
+            padding: 24px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .portal-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            transition: background 0.3s ease;
+        }
+
+        .focus1-card::before { background: var(--color-blue); }
+        .focus2-card::before { background: var(--color-purple); }
+        .focus3-card::before { background: var(--color-green); }
+
+        .portal-card:hover {
+            transform: translateY(-8px);
+            border-color: #475569;
+            background: rgba(30, 41, 59, 0.95);
+        }
+
+        .focus1-card:hover { box-shadow: 0 15px 30px rgba(59, 130, 246, 0.15); }
+        .focus2-card:hover { box-shadow: 0 15px 30px rgba(139, 92, 246, 0.15); }
+        .focus3-card:hover { box-shadow: 0 15px 30px rgba(16, 185, 129, 0.15); }
+
+        .portal-icon {
+            font-size: 40px;
+            margin-bottom: 16px;
+        }
+
+        .portal-card h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+        }
+
+        .portal-card p {
+            font-size: 13.5px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
+        .portal-badge-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: center;
+        }
+
+        .portal-badge {
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+        }
+
+        /* ==========================================
+           2. 主實驗室系統介面
+           ========================================== */
+        .app-container {
+            display: none;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .app-container.active {
+            display: flex;
+        }
+
+        header {
+            height: 64px;
+            background: #1e293b;
+            border-bottom: 1px solid var(--border-color);
+            padding: 0 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .btn-back {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-back:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #475569;
+        }
+
+        .header-logo {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .header-formula {
+            font-size: 14px;
+            color: var(--text-secondary);
+            font-family: "Courier New", Courier, monospace;
+            background: rgba(255,255,255,0.05);
+            padding: 6px 12px;
+            border-radius: 8px;
+        }
+
+        .main {
+            display: flex;
+            height: calc(100vh - 64px);
+        }
+
+        /* =====================
+           Panel (Sidebar)
+        ===================== */
+        .panel {
+            width: 340px;
+            background: var(--bg-panel);
+            padding: 16px;
+            overflow-y: auto;
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .panel::-webkit-scrollbar {
+            width: 6px;
+        }
+        .panel::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .panel::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 14px;
+            border: 1px solid var(--border-color);
+        }
+
+        .panel h2 {
+            margin-top: 0;
+            margin-bottom: 12px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* =====================
+           Vector Box
+        ===================== */
+        .vector-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .vector {
+            flex: 1;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            border: 1px solid transparent;
+        }
+
+        .blueBox {
+            background: var(--color-blue-bg);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        .redBox {
+            background: var(--color-red-bg);
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        .vector-badge {
+            font-size: 11px;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-bottom: 4px;
+        }
+
+        .blueBox .vector-badge {
+            background: var(--color-blue);
+            color: white;
+        }
+
+        .redBox .vector-badge {
+            background: var(--color-red);
+            color: white;
+        }
+
+        .vector-coord {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 700;
+            font-family: monospace;
+        }
+
+        .blue-text { color: var(--color-blue); }
+        .red-text { color: var(--color-red); }
+        .green-text { color: var(--color-green); }
+
+        /* =====================
+           Sliders & Mode List
+        ===================== */
+        .button-grid-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .menu-btn {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.2s;
+        }
+
+        .menu-btn:hover {
+            background: rgba(255,255,255,0.06);
+            transform: translateY(-1px);
+        }
+
+        .menu-btn.active {
+            background: var(--color-blue-bg);
+            border-color: var(--color-blue);
+            color: var(--color-blue);
+        }
+
+        .slider-group {
+            margin-bottom: 12px;
+        }
+        .slider-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: var(--border-color);
+            outline: none;
+            margin: 8px 0;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        #xSlider::-webkit-slider-thumb, #xSlider3::-webkit-slider-thumb {
+            background: var(--color-blue);
+            box-shadow: 0 0 8px var(--color-blue);
+        }
+        #ySlider::-webkit-slider-thumb, #ySlider3::-webkit-slider-thumb {
+            background: var(--color-red);
+            box-shadow: 0 0 8px var(--color-red);
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        /* =====================
+           Formula & Results
+        ===================== */
+        .formula-box {
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--text-primary);
+            text-align: center;
+            background: rgba(255,255,255,0.02);
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px dashed var(--border-color);
+        }
+
+        .result {
+            margin-top: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--color-green);
+            text-align: center;
+        }
+
+        /* =====================
+           Teaching Info Card (F1) / Status Box (F2 / F3)
+        ===================== */
+        .instruction-box {
+            background-color: rgba(147, 51, 234, 0.05);
+            color: #c084fc;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            line-height: 1.6;
+            border-left: 4px solid #a78bfa;
+        }
+
+        .instruction-box b {
+            color: #d8b4fe;
+            font-size: 14px;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .instruction-box code {
+            font-family: "JetBrains Mono", monospace;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 5px;
+            border-radius: 4px;
+            color: #f3e8ff;
+        }
+
+        .status-box {
+            background: rgba(255,255,255,0.02);
+            border-radius: 8px;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+
+        .matrix-container {
+            display: flex;
+            align-items: center;
+            font-family: monospace;
+            font-size: 16px;
+        }
+
+        .matrix-bracket {
+            font-size: 32px;
+            font-weight: 300;
+            color: var(--text-secondary);
+        }
+
+        .matrix-nums {
+            padding: 0 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .matrix-row {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .det-val {
+            font-family: monospace;
+            font-weight: bold;
+            font-size: 15px;
+            color: #f43f5e;
+        }
+
+        .det-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
+        /* 焦點三分析專用 */
+        .formula-card {
+            background: rgba(0, 0, 0, 0.45);
+            border-left: 4px solid var(--color-green);
+            padding: 12px;
+            border-radius: 0 10px 10px 0;
+            font-family: Consolas, "JetBrains Mono", monospace;
+            font-size: 12px;
+            line-height: 1.5;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5);
+            overflow-x: auto;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .badge.yes { background: rgba(16, 185, 129, 0.2); color: var(--color-green); }
+        .badge.no { background: rgba(239, 68, 68, 0.2); color: var(--color-red); }
+        .badge.game { background: rgba(245, 158, 11, 0.2); color: var(--color-warning); }
+
+        /* =====================
+           Buttons General
+        ===================== */
+        button {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        .btn-primary {
+            background: var(--color-blue);
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .btn-secondary {
+            background: #475569;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #334155;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+        .btn-outline:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .btn-danger {
+            background: #991b1b;
+            color: white;
+            margin-top: 8px;
+        }
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+
+        .btn-demo {
+            background: linear-gradient(135deg, #a78bfa, #7c3aed);
+            color: white;
+            box-shadow: 0 0 10px rgba(124, 58, 237, 0.4);
+        }
+        .btn-demo:hover {
+            background: linear-gradient(135deg, #c084fc, #6d28d9);
+        }
+
+        /* 焦點三自訂專屬色 */
+        .btn-challenge {
+            background: #0284c7;
+            border-color: #0284c7;
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.2);
+            color: white;
+        }
+        .btn-challenge:hover {
+            background: #0ea5e9;
+            box-shadow: 0 4px 18px rgba(14, 165, 233, 0.4);
+        }
+
+        .btn-reveal {
+            background: rgba(245, 158, 11, 0.12);
+            border: 1px solid var(--color-warning);
+            color: var(--color-warning);
+            display: none; 
+        }
+        .btn-reveal:hover {
+            background: rgba(245, 158, 11, 0.25);
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
+        }
+
+        .btn-animate {
+            background: rgba(16, 185, 129, 0.08);
+            border: 1px solid var(--color-green);
+            color: var(--color-green);
+        }
+        .btn-animate:hover {
+            background: rgba(16, 185, 129, 0.18);
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.25);
+        }
+        .btn-animate.playing {
+            background: var(--color-green);
+            color: #020617;
+            border-color: var(--color-green);
+            box-shadow: 0 0 18px rgba(16, 185, 129, 0.5);
+        }
+
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        /* =====================
+           Legend
+        ===================== */
+        .legend-items {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .legend-items p {
+            margin: 2px 0;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .dot {
+            font-size: 16px;
+        }
+
+        .dot.blue { color: var(--color-blue); }
+        .dot.red { color: var(--color-red); }
+        .dot.green { color: var(--color-green); }
+        .dot.purple { color: var(--color-purple); }
+        .dot.gold { color: var(--color-gold); }
+
+        /* =====================
+           Canvas Area
+        ===================== */
+        .canvasArea {
+            flex: 1;
+            background: #090d16;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            padding: 16px;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            background: #0f172a;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            display: block;
+        }
+
+        .status-bar {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background-color: #1e293b;
+            border: 1px solid var(--border-color);
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-family: "JetBrains Mono", monospace;
+            margin-top: 12px;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .main {
+                flex-direction: column;
+            }
+            .panel {
+                width: 100%;
+                height: 380px;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+            }
+            .canvasArea {
+                height: calc(100vh - 444px);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==========================================
+       1. 初始導覽選擇頁面
+       ========================================== -->
+    <div id="landingPage" class="landing-container">
+        <header class="landing-header">
+            <h1>📐 平面向量與線性組合互動教室</h1>
+            <p>融合幾何可視化、平移、運算原理與張成空間探究的互動式平台</p>
+        </header>
+
+        <div class="portal-grid">
+            <!-- 焦點一卡片 -->
+            <div class="portal-card focus1-card" onclick="enterFocus('focus1')">
+                <div>
+                    <div class="portal-icon">📌</div>
+                    <h2>焦點一：向量基本概念</h2>
+                    <p>
+                        學習向量的座標表示、平移的不變性幾何定理，並探討向量的加法（平行四邊形法、首尾相接法）與減法原理。
+                    </p>
+                </div>
+                <div class="portal-badge-list">
+                    <span class="portal-badge">基本表示</span>
+                    <span class="portal-badge">幾何平移</span>
+                    <span class="portal-badge">向量加法</span>
+                    <span class="portal-badge">向量減法</span>
+                </div>
+            </div>
+
+            <!-- 焦點二卡片 -->
+            <div class="portal-card focus2-card" onclick="enterFocus('focus2')">
+                <div>
+                    <div class="portal-icon">🧱</div>
+                    <h2>焦點二：線性組合與 Span</h2>
+                    <p>
+                        利用動態係數滑桿任意縮放基底向量、判斷行列式值與線性獨立性，並藉由斜角網格及追蹤解算動畫，深入探尋平面如何張成。
+                    </p>
+                </div>
+                <div class="portal-badge-list">
+                    <span class="portal-badge">基底向量</span>
+                    <span class="portal-badge">線性組合</span>
+                    <span class="portal-badge">行列式值</span>
+                    <span class="portal-badge">Span 張成空間</span>
+                </div>
+            </div>
+
+            <!-- 焦點三卡片 -->
+            <div class="portal-card focus3-card" onclick="enterFocus('focus3')">
+                <div>
+                    <div class="portal-icon">🎯</div>
+                    <h2>焦點三：向量生成與分點定理</h2>
+                    <p>
+                        深入探索線性生成的幾何著色，觀察係數和 x+y=1 的共線軌跡，並挑戰隨機靶心生成與即時聯立方程求解。
+                    </p>
+                </div>
+                <div class="portal-badge-list">
+                    <span class="portal-badge">幾何著色</span>
+                    <span class="portal-badge">分點共線</span>
+                    <span class="portal-badge">向量挑戰</span>
+                    <span class="portal-badge">聯立求解</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+       2. 主實驗室應用程式
+       ========================================== -->
+    <div id="appContainer" class="app-container">
+        <header>
+            <div class="header-left">
+                <button class="btn-back" onclick="goBackToLanding()">🏠 返回單元選擇</button>
+                <div class="header-logo">
+                    📐 平面向量互動教室 - <span id="currentModuleName">向量基本概念</span>
+                </div>
+            </div>
+            <span class="header-formula" id="headerFormula">
+                \vec{OP} = x\vec{OA} + y\vec{OB}
+            </span>
+        </header>
+
+        <div class="main">
+            <!-- 側邊控制面板 -->
+            <aside class="panel">
+                
+                <!-- 向量基本座標展示卡 (焦點一/二/三共用) -->
+                <section class="card">
+                    <h2 id="vectorSectionTitle">Vectors (當前向量)</h2>
+                    <div class="vector-container">
+                        <div class="vector blueBox">
+                            <span class="vector-badge" id="vectorBadgeA">OA</span>
+                            <p class="vector-coord">(<span id="coordAX">2</span>, <span id="coordAY">1</span>)</p>
+                        </div>
+                        <div class="vector redBox">
+                            <span class="vector-badge" id="vectorBadgeB">OB</span>
+                            <p class="vector-coord">(<span id="coordBX">1</span>, <span id="coordBY">3</span>)</p>
+                        </div>
+                    </div>
+                    <p class="tip">拖曳畫布上的端點（端點將自動吸附至整數格點）</p>
+                </section>
+
+                <!-- ==========================================
+                   焦點一專用面板內容
+                   ========================================== -->
+                <div id="panelFocus1" style="display: none;" class="button-grid-stack">
+                    <section class="card">
+                        <h2>🎮 教學單元</h2>
+                        <div class="button-grid-stack">
+                            <button class="menu-btn active" data-f1-mode="basic">📌 向量基本表示</button>
+                            <button class="menu-btn" data-f1-mode="translate">📌 幾何向量平移</button>
+                            <button class="menu-btn" data-f1-mode="add_para">➕ 加法 (平行四邊形法)</button>
+                            <button class="menu-btn" data-f1-mode="add_tri">➕ 加法 (首尾相接法)</button>
+                            <button class="menu-btn" data-f1-mode="sub_tri">➖ 減法 (三角形法)</button>
+                        </div>
+                    </section>
+
+                    <section class="card">
+                        <h2>📊 運算統計與結果</h2>
+                        <div class="formula-box">
+                            <span id="f1Formula">運算式</span>
+                        </div>
+                        <div class="result" id="f1ResultText">
+                            結果 = (3, 4)
+                        </div>
+                        <div style="margin-top: 10px; font-size: 13px; line-height: 1.6; color: var(--text-secondary);">
+                            📏 向量長度: <span id="f1Length" class="green-text" style="font-family: monospace; font-weight: bold;">-</span><br>
+                            📐 向量夾角: <span id="f1Angle" class="green-text" style="font-family: monospace; font-weight: bold;">-</span>
+                        </div>
+                    </section>
+
+                    <section class="card">
+                        <h2>💡 教學說明</h2>
+                        <div id="lessonInstructionBox" class="instruction-box">
+                            請點選教學單元開始學習。
+                        </div>
+                    </section>
+                </div>
+
+                <!-- ==========================================
+                   焦點二專用面板內容
+                   ========================================== -->
+                <div id="panelFocus2" style="display: none;" class="button-grid-stack">
+                    <section class="card">
+                        <h2>Coefficients (係數)</h2>
+                        <div class="slider-group">
+                            <div class="slider-label">
+                                <span>x = <b id="xText" class="blue-text">1.0</b></span>
+                            </div>
+                            <input id="xSlider" type="range" min="-7" max="7" step="0.1" value="1">
+                        </div>
+
+                        <div class="slider-group">
+                            <div class="slider-label">
+                                <span>y = <b id="yText" class="red-text">1.0</b></span>
+                            </div>
+                            <input id="ySlider" type="range" min="-7" max="7" step="0.1" value="1">
+                        </div>
+                    </section>
+
+                    <section class="card">
+                        <h2>Linear Combination</h2>
+                        <div class="formula-box">
+                            <span class="blue-text">x</span><strong class="blue-text">OA</strong> + 
+                            <span class="red-text">y</span><strong class="red-text">OB</strong> = 
+                            <strong class="green-text">OP</strong>
+                        </div>
+                        <div class="result" id="f2ResultText">
+                            P = (3.00, 4.00)
+                        </div>
+                    </section>
+
+                    <section class="card">
+                        <h2>Independence & Area (行列式)</h2>
+                        <div id="detStatusBox" class="status-box">
+                            <div class="matrix-container">
+                                <div class="matrix-bracket">[</div>
+                                <div class="matrix-nums">
+                                    <div class="matrix-row"><span id="m00">2</span> <span id="m01">1</span></div>
+                                    <div class="matrix-row"><span id="m10">1</span> <span id="m11">3</span></div>
+                                </div>
+                                <div class="matrix-bracket">]</div>
+                            </div>
+                            <div id="detValText" class="det-val">det = 5</div>
+                            <div id="detDesc" class="det-desc">線性獨立，張成整個 R² 平面</div>
+                        </div>
+                        <button id="detBtn" class="btn-secondary">計算行列式值</button>
+                    </section>
+
+                    <section class="card">
+                        <h2>Demonstration (動畫演示)</h2>
+                        <button id="demoBtn" class="btn-demo">啟動「任意點表示」演示</button>
+                        <p class="tip">點擊右側畫布任意空白處，組合向量會立即指向該點！</p>
+                    </section>
+
+                    <section class="card">
+                        <h2>Tools (工具)</h2>
+                        <div class="button-grid">
+                            <button id="spanBtn" class="btn-primary">展示 Span 網格</button>
+                            <button id="clearBtn" class="btn-outline">清除 Span</button>
+                        </div>
+                        <button id="resetBtn" class="btn-danger">重置實驗室</button>
+                    </section>
+                </div>
+
+                <!-- ==========================================
+                   焦點三專用面板內容
+                   ========================================== -->
+                <div id="panelFocus3" style="display: none;" class="button-grid-stack">
+                    <section class="card">
+                        <h2>① 係數調整與動畫展示</h2>
+                        <div class="control-group">
+                            <div class="slider-group">
+                                <div class="slider-label">
+                                    <span>x (OA 係數) = <b id="xText3" class="blue-text">1.0</b></span>
+                                </div>
+                                <input id="xSlider3" type="range" min="-2.0" max="2.0" step="0.1" value="1.0">
+                            </div>
+                            <div class="slider-group">
+                                <div class="slider-label">
+                                    <span>y (OB 係數) = <b id="yText3" class="red-text">1.0</b></span>
+                                </div>
+                                <input id="ySlider3" type="range" min="-2.0" max="2.0" step="0.1" value="1.0">
+                            </div>
+                        </div>
+                        <!-- 補回 onclick 的事件處理屬性 -->
+                        <button id="f3AnimateBtn" class="btn-animate" onclick="toggleAnimateCollinear()">🎬 播放共線軌跡動畫 (x + y = 1)</button>
+                    </section>
+
+                    <section class="card">
+                        <h2>② 幾何區域著色</h2>
+                        <div class="button-grid">
+                            <button id="regionNone" class="active" onclick="setRegion('none')">無著色</button>
+                            <button id="regionParallel" onclick="setRegion('parallel')">平行四邊形 [0≤x,y≤1]</button>
+                            <button id="regionTriangle" onclick="setRegion('triangle')">三角形 OAB [x+y≤1]</button>
+                            <button id="regionCollinear" onclick="setRegion('collinear')">直線 AB [x+y=1]</button>
+                        </div>
+                    </section>
+
+                    <section class="card">
+                        <h2>③ 向量目標挑戰賽</h2>
+                        <div class="button-grid-stack">
+                            <button id="challengeBtn" class="btn-challenge" onclick="toggleChallenge()">產生隨機目標靶心</button>
+                            <button id="revealBtn" class="btn-reveal" onclick="revealAnswer()">💡 公布解答</button>
+                        </div>
+                    </section>
+
+                    <section class="card">
+                        <h2>④ 數據與狀態即時分析</h2>
+                        <div class="formula-card" id="f3AnalyticsBoard">
+                            載入中...
+                        </div>
+                    </section>
+                </div>
+
+                <!-- 統一圖例 -->
+                <section class="card legend">
+                    <h2>Legend (圖例)</h2>
+                    <div class="legend-items">
+                        <p><span class="dot blue">●</span> <span id="legendTextA">向量 a (藍)</span></p>
+                        <p><span class="dot red">●</span> <span id="legendTextB">向量 b (紅)</span></p>
+                        <p id="legendItemP"><span class="dot green">●</span> <span id="legendTextP">和向量 a+b (綠)</span></p>
+                        <p id="legendItemTranslate" style="display: none;"><span class="dot purple">●</span> 平移向量 a' (紫)</p>
+                        <p id="legendTarget" style="display: none;"><span class="dot gold">●</span> T (目標任意點)</p>
+                    </div>
+                </section>
+            </aside>
+
+            <!-- 畫布工作區 -->
+            <main class="canvasArea">
+                <canvas id="canvas"></canvas>
+                <div class="status-bar">
+                    <span>💡 狀態提示：</span>
+                    <span id="mouseInfo">將滑鼠移入畫布即可開始探索</span>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // 取得 DOM 節點
+        const landingPage = document.getElementById("landingPage");
+        const appContainer = document.getElementById("appContainer");
+        const currentModuleName = document.getElementById("currentModuleName");
+        const headerFormula = document.getElementById("headerFormula");
+
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+
+        // 面板與圖例節點
+        const panelFocus1 = document.getElementById("panelFocus1");
+        const panelFocus2 = document.getElementById("panelFocus2");
+        const panelFocus3 = document.getElementById("panelFocus3");
+        const vectorSectionTitle = document.getElementById("vectorSectionTitle");
+        const vectorBadgeA = document.getElementById("vectorBadgeA");
+        const vectorBadgeB = document.getElementById("vectorBadgeB");
+        const coordAX = document.getElementById("coordAX");
+        const coordAY = document.getElementById("coordAY");
+        const coordBX = document.getElementById("coordBX");
+        const coordBY = document.getElementById("coordBY");
+
+        const legendTextA = document.getElementById("legendTextA");
+        const legendTextB = document.getElementById("legendTextB");
+        const legendTextP = document.getElementById("legendTextP");
+        const legendItemP = document.getElementById("legendItemP");
+        const legendItemTranslate = document.getElementById("legendItemTranslate");
+        const legendTarget = document.getElementById("legendTarget");
+        const mouseInfo = document.getElementById("mouseInfo");
+
+        // 焦點一節點
+        const f1Formula = document.getElementById("f1Formula");
+        const f1ResultText = document.getElementById("f1ResultText");
+        const f1Length = document.getElementById("f1Length");
+        const f1Angle = document.getElementById("f1Angle");
+        const lessonInstructionBox = document.getElementById("lessonInstructionBox");
+
+        // 焦點二節點
+        const xText = document.getElementById("xText");
+        const yText = document.getElementById("yText");
+        const xSlider = document.getElementById("xSlider");
+        const ySlider = document.getElementById("ySlider");
+        const f2ResultText = document.getElementById("f2ResultText");
+        const m00 = document.getElementById("m00");
+        const m01 = document.getElementById("m01");
+        const m10 = document.getElementById("m10");
+        const m11 = document.getElementById("m11");
+        const detValText = document.getElementById("detValText");
+        const detDesc = document.getElementById("detDesc");
+        const detStatusBox = document.getElementById("detStatusBox");
+        const demoBtn = document.getElementById("demoBtn");
+        const spanBtn = document.getElementById("spanBtn");
+        const clearBtn = document.getElementById("clearBtn");
+        const detBtn = document.getElementById("detBtn");
+        const resetBtn = document.getElementById("resetBtn");
+
+        const f1ModeButtons = Array.from(document.querySelectorAll("#panelFocus1 .menu-btn"));
+
+        // 焦點三節點
+        const xText3 = document.getElementById("xText3");
+        const yText3 = document.getElementById("yText3");
+        const xSlider3 = document.getElementById("xSlider3");
+        const ySlider3 = document.getElementById("ySlider3");
+        const f3AnimateBtn = document.getElementById("f3AnimateBtn");
+        const f3AnalyticsBoard = document.getElementById("f3AnalyticsBoard");
+        const challengeBtn = document.getElementById("challengeBtn");
+        const revealBtn = document.getElementById("revealBtn");
+
+        function updateF1ModeUI() {
+            f1ModeButtons.forEach(btn => {
+                btn.classList.toggle("active", btn.dataset.f1Mode === f1Mode);
+            });
+
+            if (f1Mode === "basic") {
+                lessonInstructionBox.innerHTML = `觀察向量 a 的座標表示與投影分量。拖曳藍色點以調整向量方向與長度。`;
+            } else if (f1Mode === "translate") {
+                lessonInstructionBox.innerHTML = `將向量 a 平移到畫面其他位置，觀察向量本身的大小與方向是否保持不變。拖曳紫色起點進行平移。`;
+            } else if (f1Mode === "add_para") {
+                lessonInstructionBox.innerHTML = `使用平行四邊形法 visualise 向量加法。拖曳端點調整 a、b 的方向與大小。`;
+            } else if (f1Mode === "add_tri") {
+                lessonInstructionBox.innerHTML = `使用三角形首尾相接法表示向量和。拖曳紅色點改變 b 向量的方向，觀察結果向量 OP。`;
+            } else if (f1Mode === "sub_tri") {
+                lessonInstructionBox.innerHTML = `觀察 a - b 的結構，從 b 的終點到 a 的終點繪製差向量。拖曳紅色點調整 b。`;
+            }
+        }
+
+        f1ModeButtons.forEach(btn => {
+            btn.addEventListener("click", () => {
+                const mode = btn.dataset.f1Mode;
+                if (!mode) return;
+                f1Mode = mode;
+                updateF1ModeUI();
+                draw();
+            });
+        });
+
+        // ==========================
+        // 核心狀態設定
+        // ==========================
+        let currentFocus = "landing"; // "landing", "focus1", "focus2", "focus3"
+        let scale = 50; 
+        let origin = { x: 0, y: 0 };
+        let dpr = window.devicePixelRatio || 1;
+
+        // 焦點一狀態數據
+        let f1Mode = "basic"; // "basic", "translate", "add_para", "add_tri", "sub_tri"
+        let vectorA = { x: 3, y: 2 };
+        let vectorB = { x: 2, y: 1 };
+        let translateStart = { x: 4, y: -2 };
+
+        // 焦點二狀態數據
+        let basisA = { x: 2, y: 1 };
+        let basisB = { x: 1, y: 3 };
+        let xCoef = 1;
+        let yCoef = 1;
+        let showSpan = false;
+        let demoActive = false;
+        let demoTime = 0;
+        let demoRequestID = null;
+        let targetPoint = null; 
+        let isClickTargetActive = false;
+
+        // 焦點三狀態數據 (全新整合)
+        let f3A = { x: 3, y: 2 };
+        let f3B = { x: -3, y: 2 };
+        let f3XCoef = 1.0;
+        let f3YCoef = 1.0;
+        let f3ActiveRegion = "none"; // "none", "parallel", "triangle", "collinear"
+        let f3ChallengeActive = false;
+        let f3TargetMath = { x: 0, y: 0 };
+        let f3IsRevealed = false;
+        let f3TargetXCoef = 1.0;
+        let f3TargetYCoef = 1.0;
+        let f3AnimatingCollinear = false;
+        let f3AnimationRequestID = null;
+
+        let dragging = null; // "a", "b", "translate", "basisA", "basisB", "f3A", "f3B", null
+
+        // ==========================
+        // 頁面與單元切換
+        // ==========================
+        function enterFocus(focusType) {
+            currentFocus = focusType;
+            landingPage.classList.add("hidden");
+            appContainer.classList.add("active");
+
+            // 清理可能在執行的動畫
+            if (demoActive) stopDemo();
+            if (f3AnimatingCollinear) stopCollinearAnimation();
+
+            if (focusType === "focus1") {
+                currentModuleName.innerHTML = "焦點一：向量基本概念";
+                headerFormula.innerHTML = "\\vec{a}、\\vec{b}、\\vec{a} \\pm \\vec{b}";
+                panelFocus1.style.display = "flex";
+                panelFocus2.style.display = "none";
+                panelFocus3.style.display = "none";
+                vectorSectionTitle.innerHTML = "向量資訊";
+                vectorBadgeA.innerHTML = "a";
+                vectorBadgeB.innerHTML = "b";
+                
+                legendTextA.innerHTML = "向量 a (藍)";
+                legendTextB.innerHTML = "向量 b (紅)";
+                legendTextP.innerHTML = "結果向量 (綠)";
+                legendItemP.style.display = "block";
+                legendTarget.style.display = "none";
+                
+                vectorA = { x: 3, y: 2 };
+                vectorB = { x: 2, y: 1 };
+                
+                updateF1ModeUI();
+            } else if (focusType === "focus2") {
+                currentModuleName.innerHTML = "焦點二：線性組合與張成空間";
+                headerFormula.innerHTML = "\\vec{OP} = x\\vec{OA} + y\\vec{OB}";
+                panelFocus1.style.display = "none";
+                panelFocus2.style.display = "flex";
+                panelFocus3.style.display = "none";
+                vectorSectionTitle.innerHTML = "基底向量 (Basis)";
+                vectorBadgeA.innerHTML = "OA";
+                vectorBadgeB.innerHTML = "OB";
+                
+                legendTextA.innerHTML = "基底 OA (藍)";
+                legendTextB.innerHTML = "基底 OB (紅)";
+                legendTextP.innerHTML = "組合 OP (綠)";
+                legendItemP.style.display = "block";
+                legendItemTranslate.style.display = "none";
+                legendTarget.style.display = "none";
+                
+                basisA = { x: 2, y: 1 };
+                basisB = { x: 1, y: 3 };
+                xCoef = 1;
+                yCoef = 1;
+                xSlider.value = 1;
+                ySlider.value = 1;
+                showSpan = false;
+            } else if (focusType === "focus3") {
+                currentModuleName.innerHTML = "焦點三：向量生成與分點定理";
+                headerFormula.innerHTML = "\\vec{OP} = x\\vec{OA} + y\\vec{OB}";
+                panelFocus1.style.display = "none";
+                panelFocus2.style.display = "none";
+                panelFocus3.style.display = "flex";
+                vectorSectionTitle.innerHTML = "基準向量";
+                vectorBadgeA.innerHTML = "OA";
+                vectorBadgeB.innerHTML = "OB";
+
+                legendTextA.innerHTML = "基準 OA (藍)";
+                legendTextB.innerHTML = "基準 OB (紅)";
+                legendTextP.innerHTML = "生成 OP (綠)";
+                legendItemP.style.display = "block";
+                legendItemTranslate.style.display = "none";
+                
+                // 還原焦點三初始值
+                f3A = { x: 3, y: 2 };
+                f3B = { x: -3, y: 2 };
+                f3XCoef = 1.0;
+                f3YCoef = 1.0;
+                xSlider3.value = 1.0;
+                ySlider3.value = 1.0;
+                f3ActiveRegion = "none";
+                f3ChallengeActive = false;
+                f3IsRevealed = false;
+                challengeBtn.innerText = "產生隨機目標靶心";
+                revealBtn.style.display = "none";
+                legendTarget.style.display = "none";
+
+                setRegion("none");
+            }
+
+            setTimeout(() => {
+                resize();
+            }, 50);
+        }
+
+        function goBackToLanding() {
+            if (demoActive) stopDemo();
+            if (f3AnimatingCollinear) stopCollinearAnimation();
+            currentFocus = "landing";
+            appContainer.classList.remove("active");
+            landingPage.classList.remove("hidden");
+        }
+
+        // ==========================
+        // 座標轉換與運算工具
+        // ==========================
+        function worldToScreen(x, y) {
+            return {
+                x: origin.x + x * scale,
+                y: origin.y - y * scale
+            };
+        }
+
+        function screenToWorld(x, y) {
+            return {
+                x: (x - origin.x) / scale,
+                y: (origin.y - y) / scale
+            };
+        }
+
+        // 向量幾何運算
+        function addVector(v1, v2) { return { x: v1.x + v2.x, y: v1.y + v2.y }; }
+        function subVector(v1, v2) { return { x: v1.x - v2.x, y: v1.y - v2.y }; }
+        function multiplyVector(v, k) { return { x: v.x * k, y: v.y * k }; }
+
+        function simplifyRoot(n) {
+            if (n === 0) return "0";
+            let outside = 1, inside = n;
+            for (let i = 2; i * i <= inside; i++) {
+                while (inside % (i * i) === 0) {
+                    outside *= i;
+                    inside /= i * i;
+                }
+            }
+            if (inside === 1) return outside.toString();
+            if (outside === 1) return "√" + inside;
+            return outside + "√" + inside;
+        }
+
+        // ==========================
+        // 拖曳熱區範圍取得 (精確螢幕距離)
+        // ==========================
+        function getDraggableTargets() {
+            if (currentFocus === "focus1") {
+                let targets = {
+                    a: { x: vectorA.x, y: vectorA.y },
+                    b: { x: vectorB.x, y: vectorB.y },
+                    translate: null
+                };
+                if (f1Mode === "translate") {
+                    targets.translate = { x: translateStart.x, y: translateStart.y };
+                } else if (f1Mode === "add_tri") {
+                    targets.b = { x: vectorA.x + vectorB.x, y: vectorA.y + vectorB.y };
+                }
+                return targets;
+            } else if (currentFocus === "focus2") {
+                return {
+                    basisA: { x: basisA.x, y: basisA.y },
+                    basisB: { x: basisB.x, y: basisB.y }
+                };
+            } else {
+                return {
+                    f3A: { x: f3A.x, y: f3A.y },
+                    f3B: { x: f3B.x, y: f3B.y }
+                };
+            }
+        }
+
+        function checkHitTarget(mouseX, mouseY) {
+            let targets = getDraggableTargets();
+            
+            if (currentFocus === "focus1") {
+                let sA = worldToScreen(targets.a.x, targets.a.y);
+                let sB = worldToScreen(targets.b.x, targets.b.y);
+                let distToA = Math.hypot(mouseX - sA.x, mouseY - sA.y);
+                let distToB = Math.hypot(mouseX - sB.x, mouseY - sB.y);
+
+                if (f1Mode === "translate" && targets.translate) {
+                    let sT = worldToScreen(targets.translate.x, targets.translate.y);
+                    if (Math.hypot(mouseX - sT.x, mouseY - sT.y) < 22) return "translate";
+                }
+
+                if (distToA < 22 && distToA < distToB) return "a";
+                if (distToB < 22) return "b";
+            } else if (currentFocus === "focus2") {
+                let sBasisA = worldToScreen(targets.basisA.x, targets.basisA.y);
+                let sBasisB = worldToScreen(targets.basisB.x, targets.basisB.y);
+                let distToA = Math.hypot(mouseX - sBasisA.x, mouseY - sBasisA.y);
+                let distToB = Math.hypot(mouseX - sBasisB.x, mouseY - sBasisB.y);
+
+                if (distToA < 22 && distToA < distToB) return "basisA";
+                if (distToB < 22) return "basisB";
+            } else {
+                let sF3A = worldToScreen(targets.f3A.x, targets.f3A.y);
+                let sF3B = worldToScreen(targets.f3B.x, targets.f3B.y);
+                let distToA = Math.hypot(mouseX - sF3A.x, mouseY - sF3A.y);
+                let distToB = Math.hypot(mouseX - sF3B.x, mouseY - sF3B.y);
+
+                if (distToA < 22 && distToA < distToB) return "f3A";
+                if (distToB < 22) return "f3B";
+            }
+            return null;
+        }
+
+        // ==========================
+        // 核心格線與軸線繪製
+        // ==========================
+        function drawGridSystem() {
+            const w = canvas.width / dpr;
+            const h = canvas.height / dpr;
+
+            const maxUnitX = Math.ceil(w / scale / 2) + 1;
+            const maxUnitY = Math.ceil(h / scale / 2) + 1;
+
+            // 1. 繪製微微的背景灰格線
+            ctx.strokeStyle = "rgba(148, 163, 184, 0.08)"; 
+            ctx.lineWidth = 1;
+
+            for (let i = -maxUnitX; i <= maxUnitX; i++) {
+                let sPt = worldToScreen(i, 0);
+                ctx.beginPath();
+                ctx.moveTo(sPt.x, 0);
+                ctx.lineTo(sPt.x, h);
+                ctx.stroke();
+            }
+
+            for (let j = -maxUnitY; j <= maxUnitY; j++) {
+                let sPt = worldToScreen(0, j);
+                ctx.beginPath();
+                ctx.moveTo(0, sPt.y);
+                ctx.lineTo(w, sPt.y);
+                ctx.stroke();
+            }
+
+            // 2. 主座標軸
+            ctx.strokeStyle = "#475569";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, origin.y); ctx.lineTo(w, origin.y);
+            ctx.moveTo(origin.x, 0); ctx.lineTo(origin.x, h);
+            ctx.stroke();
+
+            // 3. 座標軸刻度
+            ctx.fillStyle = "#94a3b8";
+            ctx.font = "10px monospace";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "top";
+
+            // X 軸
+            for (let i = -maxUnitX; i <= maxUnitX; i++) {
+                if (i === 0) continue;
+                let sPt = worldToScreen(i, 0);
+                ctx.fillText(i, sPt.x, origin.y + 6);
+                ctx.beginPath();
+                ctx.moveTo(sPt.x, origin.y - 3); ctx.lineTo(sPt.x, origin.y + 3);
+                ctx.strokeStyle = "#64748b";
+                ctx.stroke();
+            }
+
+            // Y 軸
+            ctx.textAlign = "right";
+            ctx.textBaseline = "middle";
+            for (let j = -maxUnitY; j <= maxUnitY; j++) {
+                if (j === 0) continue;
+                let sPt = worldToScreen(0, j);
+                ctx.fillText(j, origin.x - 8, sPt.y);
+                ctx.beginPath();
+                ctx.moveTo(origin.x - 3, sPt.y); ctx.lineTo(origin.x + 3, sPt.y);
+                ctx.strokeStyle = "#64748b";
+                ctx.stroke();
+            }
+        }
+
+        function drawArrow(start, end, color, thickness = 4, isResult = false) {
+            // 處理零長度向量箭頭
+            if (start.x === end.x && start.y === end.y) return;
+
+            ctx.save();
+            ctx.strokeStyle = color;
+            ctx.fillStyle = color;
+            ctx.lineWidth = thickness;
+            ctx.lineCap = "round";
+
+            if (isResult) {
+                ctx.shadowColor = color;
+                ctx.shadowBlur = 10;
+            }
+
+            ctx.beginPath();
+            ctx.moveTo(start.x, start.y);
+            ctx.lineTo(end.x, end.y);
+            ctx.stroke();
+
+            let angle = Math.atan2(end.y - start.y, end.x - start.x);
+            let arrowLength = 14;
+            let arrowAngle = 0.45;
+
+            ctx.beginPath();
+            ctx.moveTo(end.x, end.y);
+            ctx.lineTo(
+                end.x - arrowLength * Math.cos(angle - arrowAngle),
+                end.y - arrowLength * Math.sin(angle - arrowAngle)
+            );
+            ctx.lineTo(
+                end.x - arrowLength * Math.cos(angle + arrowAngle),
+                end.y - arrowLength * Math.sin(angle + arrowAngle)
+            );
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.shadowBlur = 0; 
+            ctx.restore();
+        }
+
+        function drawPoint(p, color, size = 7, shadow = true) {
+            ctx.save();
+            ctx.fillStyle = color;
+            if (shadow) {
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = color;
+            }
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, size, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+
+        function drawDashedLine(start, end, color) {
+            ctx.save();
+            ctx.setLineDash([5, 5]);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(start.x, start.y);
+            ctx.lineTo(end.x, end.y);
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        // ==========================
+        // 焦點一：基本概念繪圖分支
+        // ==========================
+        function drawFocus1() {
+            let O = worldToScreen(0, 0);
+            let sA = worldToScreen(vectorA.x, vectorA.y);
+            let sB = worldToScreen(vectorB.x, vectorB.y);
+
+            coordAX.innerHTML = Math.round(vectorA.x);
+            coordAY.innerHTML = Math.round(vectorA.y);
+            coordBX.innerHTML = Math.round(vectorB.x);
+            coordBY.innerHTML = Math.round(vectorB.y);
+
+            let resultVec = { x: 0, y: 0 };
+
+            if (f1Mode === "basic") {
+                drawArrow(O, sA, "#3b82f6", 4.5);
+                drawPoint(sA, "#60a5fa", 8);
+
+                let xPoint = worldToScreen(vectorA.x, 0);
+                let yPoint = worldToScreen(0, vectorA.y);
+                drawDashedLine(sA, xPoint, "rgba(59, 130, 246, 0.4)");
+                drawDashedLine(sA, yPoint, "rgba(59, 130, 246, 0.4)");
+
+                ctx.fillStyle = "#3b82f6";
+                ctx.font = "italic 13px system-ui";
+                ctx.fillText(`x = ${vectorA.x}`, (sA.x + xPoint.x) / 2 - 15, sA.y + (vectorA.y >= 0 ? 20 : -10));
+                ctx.fillText(`y = ${vectorA.y}`, sA.x + (vectorA.x >= 0 ? 12 : -45), (sA.y + yPoint.y) / 2 + 5);
+
+                resultVec = vectorA;
+
+            } else if (f1Mode === "translate") {
+                drawArrow(O, sA, "#3b82f6", 4.5);
+                drawPoint(sA, "#60a5fa", 8);
+
+                let sTStart = worldToScreen(translateStart.x, translateStart.y);
+                let sTEnd = worldToScreen(translateStart.x + vectorA.x, translateStart.y + vectorA.y);
+                
+                drawDashedLine(O, sTStart, "rgba(147, 51, 234, 0.4)");
+                drawArrow(sTStart, sTEnd, "#9333ea", 4.5);
+                drawPoint(sTStart, "#c084fc", 8); 
+
+                ctx.font = "12px system-ui";
+                ctx.fillStyle = "#3b82f6";
+                ctx.fillText("原向量 a", O.x + 12, O.y - 12);
+                ctx.fillStyle = "#9333ea";
+                ctx.fillText("平移後 a'", sTStart.x + 12, sTStart.y - 12);
+
+                resultVec = vectorA;
+
+            } else if (f1Mode === "add_para") {
+                resultVec = addVector(vectorA, vectorB);
+                let sR = worldToScreen(resultVec.x, resultVec.y);
+
+                drawArrow(O, sA, "#3b82f6", 4.5);
+                drawArrow(O, sB, "#ef4444", 4.5);
+                drawArrow(O, sR, "#10b981", 5, true); 
+
+                drawDashedLine(sA, sR, "rgba(239, 68, 68, 0.5)"); 
+                drawDashedLine(sB, sR, "rgba(59, 130, 246, 0.5)");  
+
+                drawPoint(sA, "#60a5fa", 8);
+                drawPoint(sB, "#f87171", 8);
+                drawPoint(sR, "#34d399", 6);
+
+            } else if (f1Mode === "add_tri") {
+                resultVec = addVector(vectorA, vectorB);
+                let sR = worldToScreen(resultVec.x, resultVec.y);
+
+                drawArrow(O, sA, "#3b82f6", 4.5);
+                drawArrow(sA, sR, "#ef4444", 4.5); 
+                drawArrow(O, sR, "#10b981", 5, true);
+
+                drawPoint(sA, "#60a5fa", 8);
+                drawPoint(sR, "#34d399", 8); 
+
+            } else if (f1Mode === "sub_tri") {
+                resultVec = subVector(vectorA, vectorB);
+                
+                drawArrow(O, sA, "#3b82f6", 4.5);
+                drawArrow(O, sB, "#ef4444", 4.5);
+                
+                drawArrow(sB, sA, "#10b981", 5, true);
+
+                drawPoint(sA, "#60a5fa", 8);
+                drawPoint(sB, "#f87171", 8);
+            }
+
+            updateFocus1Metrics(resultVec);
+        }
+
+        function updateFocus1Metrics(resultVec) {
+            let lengthSq = resultVec.x * resultVec.x + resultVec.y * resultVec.y;
+            f1Length.innerHTML = `${simplifyRoot(lengthSq)} (≈ ${Math.sqrt(lengthSq).toFixed(2)})`;
+            
+            let angle = Math.atan2(resultVec.y, resultVec.x) * 180 / Math.PI;
+            if (angle < 0) angle += 360;
+            f1Angle.innerHTML = `${angle.toFixed(1)}°`;
+
+            if (f1Mode === "basic") {
+                f1Formula.innerHTML = `a = (${resultVec.x}, ${resultVec.y})`;
+                f1ResultText.innerHTML = `a = (${resultVec.x}, ${resultVec.y})`;
+            } else if (f1Mode === "translate") {
+                f1Formula.innerHTML = `a' = a = (${resultVec.x}, ${resultVec.y})`;
+                f1ResultText.innerHTML = `a' = (${resultVec.x}, ${resultVec.y})`;
+            } else if (f1Mode === "add_para" || f1Mode === "add_tri") {
+                f1Formula.innerHTML = `a + b = (${vectorA.x}, ${vectorA.y}) + (${vectorB.x}, ${vectorB.y})`;
+                f1ResultText.innerHTML = `a + b = (${resultVec.x}, ${resultVec.y})`;
+            } else if (f1Mode === "sub_tri") {
+                f1Formula.innerHTML = `a - b = (${vectorA.x}, ${vectorA.y}) - (${vectorB.x}, ${vectorB.y})`;
+                f1ResultText.innerHTML = `a - b = (${resultVec.x}, ${resultVec.y})`;
+            }
+        }
+
+        // ==========================
+        // 焦點二：線性組合繪圖分支
+        // ==========================
+        function drawFocus2() {
+            let O = worldToScreen(0, 0);
+            let sAS = worldToScreen(basisA.x, basisA.y);
+            let sBS = worldToScreen(basisB.x, basisB.y);
+
+            coordAX.innerHTML = Math.round(basisA.x);
+            coordAY.innerHTML = Math.round(basisA.y);
+            coordBX.innerHTML = Math.round(basisB.x);
+            coordBY.innerHTML = Math.round(basisB.y);
+
+            if (showSpan) {
+                drawSpanGrid();
+            }
+
+            let P = getP();
+            let sPS = worldToScreen(P.x, P.y);
+
+            let xOA = multiplyVector(basisA, xCoef);
+            let yOB = multiplyVector(basisB, yCoef);
+            let sXOAS = worldToScreen(xOA.x, xOA.y);
+            let sYOBS = worldToScreen(yOB.x, yOB.y);
+
+            ctx.setLineDash([5, 5]);
+            ctx.lineWidth = 1.5;
+            
+            ctx.strokeStyle = "rgba(239, 68, 68, 0.5)"; 
+            ctx.beginPath();
+            ctx.moveTo(sXOAS.x, sXOAS.y);
+            ctx.lineTo(sPS.x, sPS.y);
+            ctx.stroke();
+
+            ctx.strokeStyle = "rgba(59, 130, 246, 0.5)"; 
+            ctx.beginPath();
+            ctx.moveTo(sYOBS.x, sYOBS.y);
+            ctx.lineTo(sPS.x, sPS.y);
+            ctx.stroke();
+            
+            ctx.setLineDash([]); 
+
+            // OA -> 藍色
+            drawArrow(O, sAS, "#3b82f6", 4.5);
+            drawPoint(sAS, "#60a5fa", 8);
+
+            // OB -> 紅色
+            drawArrow(O, sBS, "#ef4444", 4.5);
+            drawPoint(sBS, "#f87171", 8);
+
+            // OP -> 綠色
+            drawArrow(O, sPS, "#10b981", 5, true);
+            drawPoint(sPS, "#34d399", 6);
+
+            if (demoActive || isClickTargetActive) {
+                if (targetPoint) {
+                    let sTS = worldToScreen(targetPoint.x, targetPoint.y);
+                    ctx.strokeStyle = "#fbbf24";
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(sTS.x, sTS.y, 14, 0, Math.PI * 2);
+                    ctx.stroke();
+                    
+                    drawPoint(sTS, "#f59e0b", 5, true);
+                }
+            }
+
+            updateFocus2Metrics(P);
+        }
+
+        function getP() {
+            return addVector(multiplyVector(basisA, xCoef), multiplyVector(basisB, yCoef));
+        }
+
+        function updateFocus2Metrics(P) {
+            xText.innerHTML = xCoef.toFixed(2);
+            yText.innerHTML = yCoef.toFixed(2);
+            f2ResultText.innerHTML = `P = (${P.x.toFixed(2)}, ${P.y.toFixed(2)})`;
+
+            xSlider.value = xCoef;
+            ySlider.value = yCoef;
+
+            m00.innerHTML = Math.round(basisA.x);
+            m10.innerHTML = Math.round(basisA.y);
+            m01.innerHTML = Math.round(basisB.x);
+            m11.innerHTML = Math.round(basisB.y);
+            
+            let det = basisA.x * basisB.y - basisA.y * basisB.x;
+            detValText.innerHTML = `det = ${Math.round(det)}`;
+            
+            let isAZero = (basisA.x === 0 && basisA.y === 0);
+            let isBZero = (basisB.x === 0 && basisB.y === 0);
+
+            if (isAZero && isBZero) {
+                detDesc.innerHTML = "線性相關！皆為零向量，張成空間縮減為單一點 (原點)";
+                detStatusBox.style.borderColor = "#ef4444"; 
+            } else if (Math.abs(det) < 0.1) {
+                detDesc.innerHTML = "線性相關！共線使張成空間降維為一直線";
+                detStatusBox.style.borderColor = "#ef4444"; 
+            } else {
+                detDesc.innerHTML = "線性獨立！向量可張成完整 R² 空間";
+                detStatusBox.style.borderColor = "rgba(16, 185, 129, 0.4)"; 
+            }
+        }
+
+        function drawSpanGrid() {
+            let isAZero = (basisA.x === 0 && basisA.y === 0);
+            let isBZero = (basisB.x === 0 && basisB.y === 0);
+
+            // 訂正：若兩者皆為零向量，Span 縮減成單一個點（原點）
+            if (isAZero && isBZero) {
+                let sO = worldToScreen(0, 0);
+                drawPoint(sO, "rgba(148, 163, 184, 0.7)", 10, true);
+                return;
+            }
+
+            // 繪製明顯而清晰的 Span 斜格線
+            ctx.lineWidth = 1.5;
+            ctx.strokeStyle = "rgba(148, 163, 184, 0.32)";
+
+            const limit = 12;
+
+            for (let i = -limit; i <= limit; i++) {
+                let baseA = multiplyVector(basisA, i);
+                let start = addVector(baseA, multiplyVector(basisB, -limit));
+                let end = addVector(baseA, multiplyVector(basisB, limit));
+                
+                let sStart = worldToScreen(start.x, start.y);
+                let sEnd = worldToScreen(end.x, end.y);
+                
+                ctx.beginPath();
+                ctx.moveTo(sStart.x, sStart.y);
+                ctx.lineTo(sEnd.x, sEnd.y);
+                ctx.stroke();
+            }
+
+            for (let j = -limit; j <= limit; j++) {
+                let baseB = multiplyVector(basisB, j);
+                let start = addVector(baseB, multiplyVector(basisA, -limit));
+                let end = addVector(baseB, multiplyVector(basisA, limit));
+                
+                let sStart = worldToScreen(start.x, start.y);
+                let sEnd = worldToScreen(end.x, end.y);
+                
+                ctx.beginPath();
+                ctx.moveTo(sStart.x, sStart.y);
+                ctx.lineTo(sEnd.x, sEnd.y);
+                ctx.stroke();
+            }
+        }
+
+        // ==========================
+        // 焦點三繪圖分支 (新整合)
+        // ==========================
+        function drawFocus3(timestamp) {
+            let O = worldToScreen(0, 0);
+            let sA = worldToScreen(f3A.x, f3A.y);
+            let sB = worldToScreen(f3B.x, f3B.y);
+
+            coordAX.innerHTML = Math.round(f3A.x);
+            coordAY.innerHTML = Math.round(f3A.y);
+            coordBX.innerHTML = Math.round(f3B.x);
+            coordBY.innerHTML = Math.round(f3B.y);
+
+            // 如果啟動挑戰賽，動態計算目標實體位置 (保持同步)
+            if (f3ChallengeActive) {
+                f3TargetMath.x = f3TargetXCoef * f3A.x + f3TargetYCoef * f3B.x;
+                f3TargetMath.y = f3TargetXCoef * f3A.y + f3TargetYCoef * f3B.y;
+            }
+
+            // 繪製微光區域著色
+            drawShadedRegionF3();
+
+            // 向量 OP 生成位置計算
+            let P = addVector(multiplyVector(f3A, f3XCoef), multiplyVector(f3B, f3YCoef));
+            let sP = worldToScreen(P.x, P.y);
+
+            // 分量平行四邊形投影虛線
+            let xOA = multiplyVector(f3A, f3XCoef);
+            let yOB = multiplyVector(f3B, f3YCoef);
+            let sXOAS = worldToScreen(xOA.x, xOA.y);
+            let sYOBS = worldToScreen(yOB.x, yOB.y);
+
+            ctx.setLineDash([4, 4]);
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
+            ctx.beginPath(); ctx.moveTo(sXOAS.x, sXOAS.y); ctx.lineTo(sP.x, sP.y); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(sYOBS.x, sYOBS.y); ctx.lineTo(sP.x, sP.y); ctx.stroke();
+            ctx.setLineDash([]);
+
+            // A、B 共線無限延伸參考線（極淡虛線）
+            let dx = sB.x - sA.x;
+            let dy = sB.y - sA.y;
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.06)";
+            ctx.lineWidth = 1.2;
+            ctx.setLineDash([6, 8]);
+            ctx.beginPath();
+            ctx.moveTo(sA.x - dx * 10, sA.y - dy * 10);
+            ctx.lineTo(sB.x + dx * 10, sB.y + dy * 10);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // 繪製目標挑戰靶心
+            if (f3ChallengeActive) {
+                drawTargetF3(timestamp);
+            }
+
+            // 分量基準箭頭 (淡半透明)
+            if (f3XCoef !== 0) drawArrow(O, sXOAS, "rgba(59, 130, 246, 0.3)", 1.5);
+            if (f3YCoef !== 0) drawArrow(O, sYOBS, "rgba(239, 68, 68, 0.3)", 1.5);
+
+            // 三個主要發光主箭頭
+            drawArrow(O, sA, "#3b82f6", 4.5, true); // OA (藍)
+            drawArrow(O, sB, "#ef4444", 4.5, true); // OB (紅)
+            drawArrow(O, sP, "#10b981", 5, true);   // OP (綠)
+
+            // 紫色原點呼吸燈
+            const pulse = (Math.sin(timestamp / 300) + 1) / 2;
+            drawPoint(O, `rgba(168, 85, 247, ${0.6 + pulse * 0.4})`, 6, true);
+
+            // 控制手柄與文字標示
+            drawPoint(sA, "#60a5fa", 8);
+            ctx.fillStyle = "#f8fafc";
+            ctx.font = "bold 13px sans-serif";
+            ctx.fillText("A", sA.x - 5, sA.y - 13);
+
+            drawPoint(sB, "#f87171", 8);
+            ctx.fillText("B", sB.x - 5, sB.y - 13);
+
+            drawPoint(sP, "#34d399", 5, false);
+            ctx.fillText("P", sP.x - 5, sP.y - 13);
+
+            updateFocus3Metrics(P);
+        }
+
+        // 幾何區域著色解算
+        function drawShadedRegionF3() {
+            if (f3ActiveRegion === "none") return;
+
+            let O = worldToScreen(0, 0);
+            let sA = worldToScreen(f3A.x, f3A.y);
+            let sB = worldToScreen(f3B.x, f3B.y);
+
+            ctx.save();
+            if (f3ActiveRegion === "parallel") {
+                // 平行四邊形區域 0 <= x, y <= 1
+                let sSum = worldToScreen(f3A.x + f3B.x, f3A.y + f3B.y);
+                ctx.fillStyle = "rgba(139, 92, 246, 0.08)";
+                ctx.strokeStyle = "rgba(139, 92, 246, 0.25)";
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(O.x, O.y);
+                ctx.lineTo(sA.x, sA.y);
+                ctx.lineTo(sSum.x, sSum.y);
+                ctx.lineTo(sB.x, sB.y);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+            } else if (f3ActiveRegion === "triangle") {
+                // 三角形 OAB 區域 x+y <= 1 (x, y >= 0)
+                ctx.fillStyle = "rgba(56, 189, 248, 0.08)";
+                ctx.strokeStyle = "rgba(56, 189, 248, 0.25)";
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(O.x, O.y);
+                ctx.lineTo(sA.x, sA.y);
+                ctx.lineTo(sB.x, sB.y);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+            } else if (f3ActiveRegion === "collinear") {
+                // AB 直線共線區域 x+y = 1
+                let dx = sB.x - sA.x;
+                let dy = sB.y - sA.y;
+                ctx.strokeStyle = "rgba(245, 158, 11, 0.25)";
+                ctx.lineWidth = 3;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.moveTo(sA.x - dx * 10, sA.y - dy * 10);
+                ctx.lineTo(sB.x + dx * 10, sB.y + dy * 10);
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+
+        // 焦點三目標與綠色擴散波紋繪製
+        function drawTargetF3(timestamp) {
+            let sT = worldToScreen(f3TargetMath.x, f3TargetMath.y);
+            const isHit = Math.abs(f3XCoef - f3TargetXCoef) < 0.01 && Math.abs(f3YCoef - f3TargetYCoef) < 0.01;
+
+            if (isHit) {
+                const waveProgress = (timestamp % 1500) / 1500; 
+                ctx.save();
+                ctx.strokeStyle = `rgba(16, 185, 129, ${1.0 - waveProgress})`;
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                ctx.arc(sT.x, sT.y, 12 + waveProgress * 30, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            // 繪製紅色靶心
+            ctx.save();
+            ctx.shadowColor = "#e11d48";
+            ctx.shadowBlur = 10;
+            ctx.strokeStyle = "#e11d48";
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(sT.x, sT.y, 12, 0, Math.PI * 2);
+            ctx.stroke();
+
+            ctx.fillStyle = "#e11d48";
+            ctx.beginPath();
+            ctx.arc(sT.x, sT.y, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+
+            ctx.fillStyle = "#f43f5e";
+            ctx.font = "bold 11px sans-serif";
+            ctx.fillText(`Target(${f3TargetMath.x.toFixed(1)}, ${f3TargetMath.y.toFixed(1)})`, sT.x - 35, sT.y - 20);
+        }
+
+        // 焦點三即時分析面板文字 (同步更新)
+        function updateFocus3Metrics(P) {
+            xText3.innerHTML = f3XCoef.toFixed(1);
+            yText3.innerHTML = f3YCoef.toFixed(1);
+            xSlider3.value = f3XCoef;
+            ySlider3.value = f3YCoef;
+
+            const sum = f3XCoef + f3YCoef;
+            const isCollinear = Math.abs(sum - 1.0) < 0.005;
+
+            let text = `<strong>【代數關係式】</strong><br>`;
+            text += `OP = ${f3XCoef.toFixed(1)} OA + ${f3YCoef.toFixed(1)} OB<br>`;
+            text += `OP = (${(f3XCoef * f3A.x).toFixed(1)}, ${(f3XCoef * f3A.y).toFixed(1)}) + (${(f3YCoef * f3B.x).toFixed(1)}, ${(f3YCoef * f3B.y).toFixed(1)}) = <strong>(${P.x.toFixed(2)}, ${P.y.toFixed(2)})</strong><br><br>`;
+
+            text += `<strong>【共線定理分析】</strong><br>`;
+            text += `目前係數和 x + y = <strong>${sum.toFixed(1)}</strong><br>`;
+            if (isCollinear) {
+                text += `<span class="badge yes">✅ 完美共線狀態 (x + y = 1)</span><br>`;
+                text += `• P 點精確落在直線 AB 上。符合幾何「分點公式」結構。`;
+            } else {
+                text += `<span class="badge no">❌ 非共線狀態 (x + y ≠ 1)</span><br>`;
+                text += `• P 點偏離直線。請嘗試使兩係數和相加等於 1 以觀察規律。`;
+            }
+
+            if (f3ChallengeActive) {
+                const isHit = Math.abs(f3XCoef - f3TargetXCoef) < 0.01 && Math.abs(f3YCoef - f3TargetYCoef) < 0.01;
+                text += `<br><br><strong>【挑戰賽實時追蹤】</strong><br>`;
+                if (isHit) {
+                    text += `<span class="badge yes">🎉 COMPLETED 順利中靶！</span><br>`;
+                    text += `• 已成功合成目標向量：OP = ${f3XCoef.toFixed(1)} OA + ${f3YCoef.toFixed(1)} OB`;
+                    text += `<br>• <span style="color:#6b7280;">提示：你可以嘗試隨意拖曳 A 或 B 點，會發現靶心移動了，但過關答案依然不變喔！</span>`;
+                } else {
+                    text += `<span class="badge game">🎯 目標：Target(${f3TargetMath.x.toFixed(1)}, ${f3TargetMath.y.toFixed(1)})</span><br>`;
+                    text += `• 目前係數差值：Δx = ${(f3TargetXCoef - f3XCoef).toFixed(1)}, Δy = ${(f3TargetYCoef - f3YCoef).toFixed(1)}`;
+                }
+
+                if (f3IsRevealed) {
+                    const det = f3A.x * f3B.y - f3A.y * f3B.x;
+                    text += `<br><br><strong style="color:var(--color-warning);">【💡 解答求解步驟（克拉瑪公式）】</strong><br>`;
+                    text += `建立二元一次方程組：<br>`;
+                    text += `  { ${f3A.x}x + ${f3B.x}y = ${f3TargetMath.x.toFixed(1)} (X軸分量)<br>`;
+                    text += `  { ${f3A.y}x + ${f3B.y}y = ${f3TargetMath.y.toFixed(1)} (Y軸分量)<br>`;
+                    
+                    if (Math.abs(det) < 1e-5) {
+                        text += `<span style="color:var(--color-red);">⚠️ 基準向量 OA 與 OB 共線 (行列式 Δ = 0)，無法直接唯一求解。請任意拖曳改變 A 或 B 點的位置後再試。</span>`;
+                    } else {
+                        const detX = f3TargetMath.x * f3B.y - f3TargetMath.y * f3B.x;
+                        const detY = f3A.x * f3TargetMath.y - f3A.y * f3TargetMath.x;
+                        text += `1. 行列式分母 Δ = ${f3A.x}×${f3B.y} - ${f3B.x}×${f3A.y} = <strong>${det}</strong><br>`;
+                        text += `2. X分子 Δ_x = ${f3TargetMath.x.toFixed(1)}×${f3B.y} - ${f3B.x}×${f3TargetMath.y.toFixed(1)} = <strong>${detX.toFixed(1)}</strong><br>`;
+                        text += `3. Y分子 Δ_y = ${f3A.x}×${f3TargetMath.y.toFixed(1)} - ${f3TargetMath.x.toFixed(1)}×${f3A.y} = <strong>${detY.toFixed(1)}</strong><br>`;
+                        text += `得出解：<br>`;
+                        text += `  <strong>x</strong> = Δ_x / Δ = ${detX.toFixed(1)} / ${det} = <strong>${f3TargetXCoef.toFixed(1)}</strong><br>`;
+                        text += `  <strong>y</strong> = Δ_y / Δ = ${detY.toFixed(1)} / ${det} = <strong>${f3TargetYCoef.toFixed(1)}</strong>`;
+                    }
+                }
+            }
+
+            f3AnalyticsBoard.innerHTML = text;
+        }
+
+        // ==========================
+        // 畫布主渲染分流入口
+        // ==========================
+        function draw(timestamp) {
+            if (currentFocus === "landing") return;
+            
+            const w = canvas.width / dpr;
+            const h = canvas.height / dpr;
+            ctx.clearRect(0, 0, w, h);
+
+            drawGridSystem();
+
+            if (currentFocus === "focus1") {
+                drawFocus1();
+            } else if (currentFocus === "focus2") {
+                drawFocus2();
+            } else if (currentFocus === "focus3") {
+                drawFocus3(timestamp || performance.now());
+            }
+        }
+
+        // ==========================
+        // 尺寸自適應與視窗改變
+        // ==========================
+        function resize() {
+            const width = canvas.clientWidth;
+            const height = canvas.clientHeight;
+            
+            canvas.width = width * dpr;
+            canvas.height = height * dpr;
+            
+            ctx.resetTransform();
+            ctx.scale(dpr, dpr);
+            
+            origin.x = width / 2;
+            origin.y = height / 2;
+            
+            draw();
+        }
+
+        window.addEventListener("resize", resize);
+
+        // 使用動畫幀驅動繪圖（使發光呼吸燈與中靶同心圓波紋渲染順暢）
+        function animationLoop(timestamp) {
+            draw(timestamp);
+            requestAnimationFrame(animationLoop);
+        }
+
+        // ==========================
+        // 焦點三：功能函數控制
+        // ==========================
+        function setRegion(type) {
+            f3ActiveRegion = type;
+            
+            document.querySelectorAll("#panelFocus3 .button-grid button").forEach(btn => {
+                btn.classList.remove("active");
+            });
+            
+            if (type === 'none') document.getElementById("regionNone").classList.add("active");
+            if (type === 'parallel') document.getElementById("regionParallel").classList.add("active");
+            if (type === 'triangle') document.getElementById("regionTriangle").classList.add("active");
+            if (type === 'collinear') document.getElementById("regionCollinear").classList.add("active");
+        }
+
+        function getRandomCoefficient() {
+            let val = 0;
+            while (val === 0 || Math.abs(val) < 0.2) {
+                val = parseFloat((-1.5 + Math.random() * 3.0).toFixed(1));
+            }
+            return val;
+        }
+
+        function toggleChallenge() {
+            f3ChallengeActive = true;
+            f3IsRevealed = false; 
+
+            // 生成隨機答案係數
+            f3TargetXCoef = getRandomCoefficient();
+            f3TargetYCoef = getRandomCoefficient();
+            
+            challengeBtn.innerText = "🔄 更換挑戰目標";
+            revealBtn.style.display = "block"; 
+            legendTarget.style.display = "block";
+        }
+
+        function revealAnswer() {
+            if (!f3ChallengeActive) return;
+            if (f3AnimatingCollinear) toggleAnimateCollinear(); // 終止動畫
+
+            f3XCoef = f3TargetXCoef;
+            f3YCoef = f3TargetYCoef;
+            
+            xSlider3.value = f3TargetXCoef;
+            ySlider3.value = f3TargetYCoef;
+
+            f3IsRevealed = true;
+        }
+
+        function toggleAnimateCollinear() {
+            f3AnimatingCollinear = !f3AnimatingCollinear;
+
+            if (f3AnimatingCollinear) {
+                f3AnimateBtn.classList.add("playing");
+                f3AnimateBtn.innerText = "⏸ 暫停共線軌跡動畫";
+                
+                setRegion('collinear');
+
+                xSlider3.disabled = true;
+                ySlider3.disabled = true;
+
+                runCollinearAnimation();
+            } else {
+                stopCollinearAnimation();
+            }
+        }
+
+        function stopCollinearAnimation() {
+            f3AnimatingCollinear = false;
+            f3AnimateBtn.classList.remove("playing");
+            f3AnimateBtn.innerText = "🎬 播放共線軌跡動畫 (x + y = 1)";
+            
+            xSlider3.disabled = false;
+            ySlider3.disabled = false;
+            
+            if (f3AnimationRequestID) {
+                cancelAnimationFrame(f3AnimationRequestID);
+            }
+
+            f3XCoef = parseFloat(xSlider3.value);
+            f3YCoef = parseFloat(ySlider3.value);
+        }
+
+        function runCollinearAnimation() {
+            function updateAnim(timestamp) {
+                if (!f3AnimatingCollinear) return;
+
+                const cyclePeriod = 4000; 
+                const progress = (timestamp % cyclePeriod) / cyclePeriod; 
+                const sinValue = (Math.sin(progress * Math.PI * 2) + 1) / 2; 
+
+                const rawX = -1.0 + sinValue * 3.0; 
+                const simulatedX = Math.round(rawX * 10) / 10;
+                const simulatedY = Math.round((1.0 - simulatedX) * 10) / 10;     
+
+                f3XCoef = simulatedX;
+                f3YCoef = simulatedY;
+
+                f3AnimationRequestID = requestAnimationFrame(updateAnim);
+            }
+            f3AnimationRequestID = requestAnimationFrame(updateAnim);
+        }
+
+        // ==========================
+        // 滑動條輸入事件 (焦點二)
+        // ==========================
+        xSlider.oninput = function() {
+            if (demoActive) stopDemo();
+            xCoef = parseFloat(this.value);
+            isClickTargetActive = false;
+            legendTarget.style.display = "none";
+        };
+
+        ySlider.oninput = function() {
+            if (demoActive) stopDemo();
+            yCoef = parseFloat(this.value);
+            isClickTargetActive = false;
+            legendTarget.style.display = "none";
+        };
+
+        // ==========================
+        // 滑動條輸入事件 (焦點三)
+        // ==========================
+        xSlider3.oninput = function() {
+            if (f3AnimatingCollinear) stopCollinearAnimation();
+            f3XCoef = parseFloat(this.value);
+            f3IsRevealed = false; 
+        };
+
+        ySlider3.oninput = function() {
+            if (f3AnimatingCollinear) stopCollinearAnimation();
+            f3YCoef = parseFloat(this.value);
+            f3IsRevealed = false; 
+        };
+
+        // ==========================
+        // 聯立求解工具 (優化引數傳遞)
+        // ==========================
+        function solveCoefficients(target, vecA, vecB) {
+            let det = vecA.x * vecB.y - vecA.y * vecB.x;
+            if (Math.abs(det) < 0.001) return null; 
+
+            let x = (target.x * vecB.y - target.y * vecB.x) / det;
+            let y = (vecA.x * target.y - vecA.y * target.x) / det;
+            return { x, y };
+        }
+
+        // ==========================
+        // 焦點二專屬：動態示範動畫
+        // ==========================
+        function updateDemoFrame() {
+            if (!demoActive) return;
+
+            demoTime += 0.015;
+
+            let tx = 4.2 * Math.sin(demoTime);
+            let ty = 3.2 * Math.sin(demoTime * 0.73 + 0.6);
+
+            targetPoint = { x: tx, y: ty };
+
+            let solution = solveCoefficients(targetPoint, basisA, basisB);
+            if (solution) {
+                xCoef = solution.x;
+                yCoef = solution.y;
+            }
+
+            draw();
+            demoRequestID = requestAnimationFrame(updateDemoFrame);
+        }
+
+        function stopDemo() {
+            demoActive = false;
+            isClickTargetActive = false;
+            targetPoint = null;
+            legendTarget.style.display = "none";
+            cancelAnimationFrame(demoRequestID);
+            demoBtn.innerHTML = "啟動「任意點表示」演示";
+            demoBtn.style.background = ""; 
+            draw();
+        }
+
+        function toggleDemo() {
+            if (demoActive) {
+                stopDemo();
+            } else {
+                let det = basisA.x * basisB.y - basisA.y * basisB.x;
+                if (Math.abs(det) < 0.1) {
+                    alert("當前基底共線（線性相關），降維狀態下無法張成平面！請先調整 OA、OB 使其不共線。");
+                    return;
+                }
+                demoActive = true;
+                isClickTargetActive = false;
+                legendTarget.style.display = "block";
+                demoBtn.innerHTML = "停止演示";
+                demoBtn.style.background = "#ef4444"; 
+                demoTime = 0;
+                updateDemoFrame();
+            }
+        }
+
+        demoBtn.onclick = toggleDemo;
+
+        // ==========================
+        // 滑鼠與觸控拖曳 + 點擊定位
+        // ==========================
+        function handlePointerDown(clientX, clientY) {
+            let rect = canvas.getBoundingClientRect();
+            let mouseX = (clientX - rect.left) * (canvas.width / dpr / rect.width);
+            let mouseY = (clientY - rect.top) * (canvas.height / dpr / rect.height);
+
+            let hit = checkHitTarget(mouseX, mouseY);
+            if (hit) {
+                dragging = hit;
+                canvas.style.cursor = "grabbing";
+            } else {
+                // 焦點二空白處點擊定位
+                if (currentFocus === "focus2") {
+                    let det = basisA.x * basisB.y - basisA.y * basisB.x;
+                    let isAZero = (basisA.x === 0 && basisA.y === 0);
+                    let isBZero = (basisB.x === 0 && basisB.y === 0);
+
+                    if (isAZero && isBZero) return; 
+                    if (Math.abs(det) < 0.1) return; 
+
+                    if (demoActive) stopDemo();
+
+                    isClickTargetActive = true;
+                    legendTarget.style.display = "block";
+
+                    let clickedWorld = screenToWorld(mouseX, mouseY);
+                    targetPoint = { x: clickedWorld.x, y: clickedWorld.y };
+
+                    let solution = solveCoefficients(targetPoint, basisA, basisB);
+                    if (solution) {
+                        xCoef = solution.x;
+                        yCoef = solution.y;
+                    }
+                }
+            }
+        }
+
+        function handlePointerMove(clientX, clientY) {
+            let rect = canvas.getBoundingClientRect();
+            let mouseX = (clientX - rect.left) * (canvas.width / dpr / rect.width);
+            let mouseY = (clientY - rect.top) * (canvas.height / dpr / rect.height);
+
+            let worldPos = screenToWorld(mouseX, mouseY);
+            mouseInfo.innerHTML = `當前游標坐標：(${Math.round(worldPos.x)}, ${Math.round(worldPos.y)})`;
+
+            if (!dragging) {
+                let hit = checkHitTarget(mouseX, mouseY);
+                canvas.style.cursor = hit ? "grab" : "default";
+                return;
+            }
+
+            let pos = screenToWorld(mouseX, mouseY);
+            let finalX = Math.round(pos.x);
+            let finalY = Math.round(pos.y);
+
+            if (currentFocus === "focus1") {
+                if (dragging === "a") {
+                    vectorA = { x: finalX, y: finalY };
+                } else if (dragging === "b") {
+                    if (f1Mode === "add_tri") {
+                        vectorB = { x: finalX - vectorA.x, y: finalY - vectorA.y };
+                    } else {
+                        vectorB = { x: finalX, y: finalY };
+                    }
+                } else if (dragging === "translate") {
+                    translateStart = { x: finalX, y: finalY };
+                }
+            } else if (currentFocus === "focus2") {
+                if (dragging === "basisA") {
+                    basisA = { x: finalX, y: finalY };
+                    if (isClickTargetActive && targetPoint) {
+                        let solution = solveCoefficients(targetPoint, basisA, basisB);
+                        if (solution) {
+                            xCoef = solution.x;
+                            yCoef = solution.y;
+                        }
+                    }
+                } else if (dragging === "basisB") {
+                    basisB = { x: finalX, y: finalY };
+                    if (isClickTargetActive && targetPoint) {
+                        let solution = solveCoefficients(targetPoint, basisA, basisB);
+                        if (solution) {
+                            xCoef = solution.x;
+                            yCoef = solution.y;
+                        }
+                    }
+                }
+            } else if (currentFocus === "focus3") {
+                if (dragging === "f3A") {
+                    f3A = { x: finalX, y: finalY };
+                } else if (dragging === "f3B") {
+                    f3B = { x: finalX, y: finalY };
+                }
+            }
+        }
+
+        function handlePointerUp() {
+            dragging = null;
+            canvas.style.cursor = "default";
+        }
+
+        canvas.onmousedown = (e) => handlePointerDown(e.clientX, e.clientY);
+        canvas.onmousemove = (e) => handlePointerMove(e.clientX, e.clientY);
+        window.onmouseup = handlePointerUp;
+
+        canvas.addEventListener("touchstart", (e) => {
+            if (e.touches.length === 1) {
+                handlePointerDown(e.touches[0].clientX, e.touches[0].clientY);
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        canvas.addEventListener("touchmove", (e) => {
+            if (e.touches.length === 1) {
+                handlePointerMove(e.touches[0].clientX, e.touches[0].clientY);
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        window.addEventListener("touchend", handlePointerUp);
+
+        // ==========================
+        // 焦點二按鈕事件
+        // ==========================
+        spanBtn.onclick = function() {
+            showSpan = true;
+            draw();
+        };
+
+        clearBtn.onclick = function() {
+            showSpan = false;
+            draw();
+        };
+
+        detBtn.onclick = function() {
+            let det = basisA.x * basisB.y - basisA.y * basisB.x;
+            let isAZero = (basisA.x === 0 && basisA.y === 0);
+            let isBZero = (basisB.x === 0 && basisB.y === 0);
+
+            if (isAZero && isBZero) {
+                alert("行列式值 = 0\n\n線性相關！兩個基底皆為零向量，張成空間僅縮減為單一座標原點。");
+            } else if (Math.abs(det) < 0.1) {
+                alert(`行列式值 = ${Math.round(det)}\n\n兩基底共線（線性相關），兩向量降維只能張成一條直線。`);
+            } else {
+                alert(`行列式值 = ${Math.round(det)}\n\n兩向量非零且不平行（線性獨立），足以張成整個二維實數平面。`);
+            }
+        };
+
+        resetBtn.onclick = function() {
+            if (demoActive) stopDemo();
+            isClickTargetActive = false;
+            targetPoint = null;
+            legendTarget.style.display = "none";
+            
+            basisA = { x: 2, y: 1 };
+            basisB = { x: 1, y: 3 };
+            xCoef = 1;
+            yCoef = 1;
+            xSlider.value = 1;
+            ySlider.value = 1;
+            showSpan = false;
+            draw();
+        };
+
+        // ==========================
+        // 啟動與初始化
+        // ==========================
+        resize();
+        requestAnimationFrame(animationLoop);
+    </script>
+</body>
+</html>
